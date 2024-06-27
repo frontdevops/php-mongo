@@ -1,8 +1,6 @@
 # php-mongo
 Class Mongo - Represents a MongoDB connection and operations class.
 
-# Usage
-
 ## Basic Example: Inserting and Retrieving a Document
 ```php
 $db = GeekJOB\Mongo();
