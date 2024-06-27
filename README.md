@@ -1,6 +1,35 @@
 # php-mongo
 Class Mongo - Represents a MongoDB connection and operations class.
 
+# Usage
+
+## Basic Example: Inserting and Retrieving a Document
+```
+$db = GeekJOB\Mongo();
+$db('users')->insert([
+    'name' => 'John Doe',
+    'email' => 'john@example.com',
+    'age' => 30
+]);
+
+$user = $db('users')->findOne(['email' => 'john@example.com']);
+print_r($user);
+```
+Explanation: This example demonstrates the basic usage of the library. We first create a MongoDB connection using GeekJOB\Mongo(). Then, we insert a new document into the 'users' collection using the insert() method. Finally, we retrieve the inserted document using findOne() with a filter for the email address.
+
+## Updating a Document
+```php
+$db = GeekJOB\Mongo();
+$db('users')->updateOne(
+    ['email' => 'john@example.com'],
+    ['$set' => ['age' => 31]]
+);
+```
+Explanation: This example shows how to update a single document. We use the updateOne() method, providing a filter to match the document and an update operation to set the new age value. The $set operator is used to update specific fields without affecting others.
+
+
+
+# Methods
 ```php
 /**
  * Checks the connection to the MongoDB server.
