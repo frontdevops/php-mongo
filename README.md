@@ -29,13 +29,13 @@ public function findOne(array $filter = [], array $opts = [], bool $assoc = fals
 
 /**
  * Finds a document by its ID.
- * 
- * @param string $_id The ID of the document to find
+ *
+ * @param object|string $_id The ID of the document to find
  * @param bool $assoc Whether to return the result as an associative array
  * @return object|null The found document or null if not found
  * @throws \MongoDB\Driver\Exception\Exception
  */
-public function findById($_id, bool $assoc = false)
+public function findById(object|string $_id, bool $assoc = false)
 {
     // ... (implementation)
 }
