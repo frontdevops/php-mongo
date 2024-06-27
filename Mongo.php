@@ -145,7 +145,7 @@ namespace GeekJOB
 
 			if (empty(self::$dbnamespace))
 				throw new \Exception("Empty database name");
-//        self::$dbnamespace = CONFIG['storage']['data']['base'];
+			// self::$dbnamespace = CONFIG['storage']['data']['base'];
 		}
 
 
@@ -208,7 +208,7 @@ namespace GeekJOB
 		 * @return mixed|null The found document or null if not found
 		 * @throws \MongoDB\Driver\Exception\Exception
 		 */
-		public function findOne(array $filter = [], array $opts = [], bool $assoc = false)
+		public function findOne(array $filter = [], array $opts = [], bool $assoc = false): mixed
 		{
 			$opts['limit'] = 1;
 			if (!empty($this->transaction))
@@ -225,12 +225,12 @@ namespace GeekJOB
 		/**
 		 * Finds a document by its ID.
 		 *
-		 * @param string $_id The ID of the document to find
+		 * @param object|string $_id The ID of the document to find
 		 * @param bool $assoc Whether to return the result as an associative array
 		 * @return object|null The found document or null if not found
 		 * @throws \MongoDB\Driver\Exception\Exception
 		 */
-		public function findById($_id, bool $assoc = false)
+		public function findById(object|string $_id, bool $assoc = false): ?object
 		{
 			if (!($_id instanceof \MongoDB\BSON\ObjectId)) {
 				try {
@@ -261,7 +261,7 @@ namespace GeekJOB
 		 * @return mixed The found documents or cursor
 		 * @throws \MongoDB\Driver\Exception\Exception
 		 */
-		public function find(array $filter = [], array $opts = [], $returnCursor = false, bool $assoc = false)
+		public function find(array $filter = [], array $opts = [], $returnCursor = false, bool $assoc = false): mixed
 		{
 			if (!empty($this->transaction))
 				$opts['session'] = $this->transaction;
