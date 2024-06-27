@@ -40,7 +40,7 @@ $db = GeekJOB\Mongo();
 $users = $db('users')->find([
     'age' => ['$gte' => 25, '$lte' => 50],
     'status' => 'active'
-])->toArray();
+]);
 
 foreach ($users as $user) {
     echo $user->name . "\n";
@@ -55,6 +55,10 @@ $users = $db('users')->find([
     'age' => ['$gte' => 25, '$lte' => 50],
     'status' => 'active'
 ], assoc: true);
+
+foreach ($users as $user) {
+    echo $user['name'] . "\n";
+}
 ```
 
 Explanation: This example showcases a more complex query using the find() method. We're searching for users aged between 25 and 50 (inclusive) with an 'active' status. The $gte and $lte operators are used for the age range. The results are converted to an array and then iterated over.
