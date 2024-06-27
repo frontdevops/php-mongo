@@ -4,7 +4,7 @@ Class Mongo - Represents a MongoDB connection and operations class.
 # Usage
 
 ## Basic Example: Inserting and Retrieving a Document
-```
+```php
 $db = GeekJOB\Mongo();
 $db('users')->insert([
     'name' => 'John Doe',
@@ -27,6 +27,71 @@ $db('users')->updateOne(
 ```
 Explanation: This example shows how to update a single document. We use the updateOne() method, providing a filter to match the document and an update operation to set the new age value. The $set operator is used to update specific fields without affecting others.
 
+## Deleting a Document
+```php
+$db = GeekJOB\Mongo();
+$db('users')->deleteOne(['email' => 'john@example.com']);
+```
+Explanation: Here, we demonstrate how to delete a single document from the 'users' collection. The deleteOne() method is used with a filter to specify which document to remove.
+
+## Performing a Query with Multiple Conditions
+```php
+$db = GeekJOB\Mongo();
+$users = $db('users')->find([
+    'age' => ['$gte' => 25, '$lte' => 50],
+    'status' => 'active'
+])->toArray();
+
+foreach ($users as $user) {
+    echo $user->name . "\n";
+}
+```
+Explanation: This example showcases a more complex query using the find() method. We're searching for users aged between 25 and 50 (inclusive) with an 'active' status. The $gte and $lte operators are used for the age range. The results are converted to an array and then iterated over.
+
+## Using Aggregation
+```php
+$db = GeekJOB\Mongo();
+$result = $db('orders')->aggregate([
+    ['$group' => [
+        '_id' => '$status',
+        'totalAmount' => ['$sum' => '$amount']
+    ]],
+    ['$sort' => ['totalAmount' => -1]]
+]);
+
+foreach ($result as $group) {
+    echo "Status: " . $group->_id . ", Total: $" . $group->totalAmount . "\n";
+}
+```
+Explanation: This example demonstrates the use of MongoDB's aggregation framework. We're grouping orders by their status and calculating the total amount for each status. The results are then sorted in descending order of the total amount. This showcases how to perform complex data analysis operations using the library.
+
+## Using Transactions
+```php
+$db = GeekJOB\Mongo();
+try {
+    $db->transactionStart();
+    
+    $db('accounts')->updateOne(
+        ['userId' => 123],
+        ['$inc' => ['balance' => -100]]
+    );
+    
+    $db('transactions')->insert([
+        'userId' => 123,
+        'amount' => 100,
+        'type' => 'withdrawal',
+        'date' => $db->date()
+    ]);
+    
+    $db->transactionCommit();
+    echo "Transaction completed successfully.\n";
+} catch (Exception $e) {
+    $db->transactionAbort();
+    echo "Transaction failed: " . $e->getMessage() . "\n";
+}
+```
+Explanation: This example illustrates how to use transactions for ensuring data consistency across multiple operations. We start a transaction, perform two operations (updating an account balance and inserting a transaction record), and then commit the transaction. If any error occurs, the transaction is aborted, rolling back any changes. This is crucial for maintaining data integrity in financial operations or other scenarios where multiple related updates must succeed or fail together.
+These examples demonstrate the versatility and power of the GeekJOB MongoDB Library, showcasing various operations from basic CRUD to complex aggregations and transactions. The library's consistent interface `($db($table)->...)` makes it intuitive to use across different types of operations.
 
 
 # Methods
