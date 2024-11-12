@@ -380,6 +380,21 @@ public static function todtime(\MongoDB\BSON\UTCDateTime $dt, string $format): s
 }
 ```
 
+/**
+ * Lists all collections in the current database.
+ *
+ * @param array $opts Additional options for the listCollections command
+ * @param bool $nameOnly If true, returns only collection names instead of full collection info
+ * @return array Array of collection information or collection names
+ * @throws \MongoDB\Driver\Exception\Exception
+ */
+public function listCollections(array $opts = [], bool $nameOnly = false): array
+{
+    // ... (implementation)
+}
+```
+
+
 # License
 MIT
 
