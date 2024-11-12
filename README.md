@@ -378,9 +378,8 @@ public static function todtime(\MongoDB\BSON\UTCDateTime $dt, string $format): s
 {
     // ... (implementation)
 }
-```
 
-```php
+
 /**
  * Lists all collections in the current database.
  *
@@ -394,7 +393,49 @@ public function listCollections(array $opts = [], bool $nameOnly = false): array
 {
     // ... (implementation)
 }
+
+
+/**
+ * @param bool $assoc
+ * @return array|object|null
+ * @throws \MongoDB\Driver\Exception\Exception
+ */
+public function getMetaData(?string $collection, bool $assoc = false): array|object|null
+{
+}
+
+
+/**
+ * @param string|null $collection
+ * @return string|null
+ * @throws \MongoDB\Driver\Exception\Exception
+ */
+function getDescription(?string $collection): ?string
+{
+}
+
+
+/**
+ * @param string|null $collection
+ * @param string $description
+ * @return void
+ * @throws \MongoDB\Driver\Exception\Exception
+ */
+public function setDescription(?string $collection, string $description): void
+{
+}
+
+
+/**
+ * @param array|object $set
+ * @return void
+ * @throws \MongoDB\Driver\Exception\Exception
+ */
+public function setMetaData(?string $collection, array|object $set): void
+{
+}
 ```
+
 
 
 # License
