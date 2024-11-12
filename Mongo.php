@@ -22,8 +22,8 @@ namespace
  * GeekJOB namespace.
  * Contains the Mongo class and related functions for MongoDB operations.
  * @package GeekJOB
- * @version 1.0.1
- * @since 1.0.1
+ * @version 1.0.2
+ * @since 1.0.2
  * @link
  * @license MIT
  * @see
@@ -817,6 +817,51 @@ namespace GeekJOB
 		public static function todtime(\MongoDB\BSON\UTCDateTime $dt, string $format): string
 		{
 			return $dt->toDateTime()->setTimeZone(DTZ())->format($format);
+		}
+
+		/**
+		 * Lists all collections in the current database.
+		 *
+		 * @param array $opts Additional options for the listCollections command
+		 * @param bool $nameOnly If true, returns only collection names instead of full collection info
+		 * @return array Array of collection information or collection names
+		 * @throws \MongoDB\Driver\Exception\Exception
+		 */
+		public function listCollections(array $opts = [], bool $nameOnly = false): array
+		{
+			try {
+				// Create command to list collections
+				$command = [
+					'listCollections' => 1,
+					'cursor'          => new \stdClass(),
+				];
+
+				// Add any additional options
+				if (!empty($opts)) {
+					$command = array_merge($command, $opts);
+				}
+
+				// Execute the command
+				$cursor = $this
+					->newCommand($command)
+					->execCommand();
+
+				// Convert cursor to array
+				$collections = $cursor->toArray();
+
+				// If nameOnly is true, extract only the collection names
+				if ($nameOnly) {
+					return array_map(function ($collection) {
+						return $collection->name;
+					}, $collections);
+				}
+
+				return $collections;
+			}
+			catch (\Exception $e) {
+				\captureError($e);
+				return [];
+			}
 		}
 	}
 
