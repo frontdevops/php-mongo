@@ -863,6 +863,74 @@ namespace GeekJOB
 				return [];
 			}
 		}
+
+
+		/**
+		 * @param bool $assoc
+		 * @return array|object|null
+		 * @throws \MongoDB\Driver\Exception\Exception
+		 */
+		public function getMetaData(?string $collection, bool $assoc = false): array|object|null
+		{
+			$collection = $collection ?: $this->collection;
+			$meta = $this
+				->__invoke('system.js')
+				->findOne(['_id' => $collection], assoc: $assoc);
+			return $meta;
+		}
+
+
+		/**
+		 * @param string|null $collection
+		 * @return string|null
+		 * @throws \MongoDB\Driver\Exception\Exception
+		 */
+		function getDescription(?string $collection): ?string
+		{
+			$collection = $collection ?: $this->collection;
+			$meta = $this->getMetaData($collection);
+			if (empty($meta)) return null;
+			return $meta->value->description ?? null;
+		}
+
+
+		/**
+		 * @param string|null $collection
+		 * @param string $description
+		 * @return void
+		 * @throws \MongoDB\Driver\Exception\Exception
+		 */
+		public function setDescription(?string $collection, string $description): void
+		{
+			$collection = $collection ?: $this->collection;
+			$this->setMetaData($collection, ['description' => $description]);
+		}
+
+
+		/**
+		 * @param array|object $set
+		 * @return void
+		 * @throws \MongoDB\Driver\Exception\Exception
+		 */
+		public function setMetaData(?string $collection, array|object $set): void
+		{
+			$collection = $collection ?: $this->collection;
+			$meta = $this->getMetaData();
+			if (empty($meta)) {
+				$meta = [
+					'_id' => $collection,
+					'created' => $this->date(),
+					'updated' => $this->date(),
+				];
+				$meta = array_merge($meta, $set);
+				$this->insert($meta);
+			}
+			else {
+				$meta['updated'] = $this->date();
+				$meta = array_merge($meta, $set);
+				$this->update(['_id' => $collection], $meta);
+			}
+		}
 	}
 
 
