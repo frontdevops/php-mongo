@@ -380,7 +380,7 @@ public static function todtime(\MongoDB\BSON\UTCDateTime $dt, string $format): s
 }
 ```
 
-```
+```php
 /**
  * Lists all collections in the current database.
  *
