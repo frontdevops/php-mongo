@@ -9,18 +9,21 @@ namespace
 		 */
 		function captureError($e): void
 		{
-			echo $e->getMessage(), "\n";
+			if (defined('DEBUG') && true === DEBUG) {
+				echo $e->getMessage(), "\n";
+			}
 		}
 	}
 }
+
 
 
 /**
  * GeekJOB namespace.
  * Contains the Mongo class and related functions for MongoDB operations.
  * @package GeekJOB
- * @version 1.0.0
- * @since 1.0.0
+ * @version 1.0.1
+ * @since 1.0.1
  * @link
  * @license MIT
  * @see
@@ -771,7 +774,10 @@ namespace GeekJOB
 		 */
 		public function __call(string $name, array $arguments)
 		{
-			return call_user_func([$this, "_$name"], ...$arguments);
+			if (method_exists($this, "_$name")) {
+				return call_user_func([$this, "_$name"], ...$arguments);
+			}
+			throw new \BadMethodCallException("Method $name not found");
 		}
 
 
