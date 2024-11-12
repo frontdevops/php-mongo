@@ -931,6 +931,54 @@ namespace GeekJOB
 				$this->update(['_id' => $collection], $meta);
 			}
 		}
+
+				/**
+		 * @param mixed $v
+		 * @return string
+		 */
+		public function cell_to_string(mixed $v, array $custom_formatters = []): string
+		{
+			if ($v instanceof \MongoDB\BSON\ObjectId) {
+				return (string)$v;
+			}
+			elseif ($v instanceof \MongoDB\BSON\UTCDateTime) {
+				if (!empty($custom_formatters['datetime'])) {
+					return $this->toDateTime($v, $custom_formatters['datetime']);
+				}
+				return $this->toDateTime($v, 'Y-m-d H:i:s');
+			}
+			elseif (is_object($v)) {
+				return (string)$v;
+			}
+			elseif (is_array($v)) {
+				return implode(', ', $v);
+			}
+			return (string) $v;
+		}
+
+
+		/**
+		 * @param array|object|null $result
+		 * @param array $custom_formatters
+		 * @return mixed
+		 */
+		public function prepare_result_for_view(array|object|null $result, array $custom_formatters = []): mixed
+		{
+			if (empty($result)) return $result;
+			if (is_object($result)) return $this->cell_to_string($result);
+			if (is_array($result)) {
+				$records = [];
+				foreach ($result as $row) {
+					$record = [];
+					foreach ($row as $k => $v) {
+						$record[$k] = $this->cell_to_string($v, $custom_formatters);
+					}
+					$records[] = $record;
+				}
+				return $records;
+			}
+			return $result;
+		}
 	}
 
 
