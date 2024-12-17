@@ -17,13 +17,12 @@ namespace
 }
 
 
-
 /**
  * GeekJOB namespace.
  * Contains the Mongo class and related functions for MongoDB operations.
  * @package GeekJOB
- * @version 1.0.2
- * @since 1.0.2
+ * @version 1.0.0
+ * @since 1.0.0
  * @link
  * @license MIT
  * @see
@@ -37,6 +36,7 @@ namespace
  * @author
  * @credits
  */
+
 namespace GeekJOB
 {
 	if (!function_exists('DTZ')) {
@@ -116,7 +116,7 @@ namespace GeekJOB
 		 * @return self
 		 * @throws \MongoConnectionException
 		 */
-		public static function getInstance(string $storage_data_uri = null): self
+		public static function getInstance(?string $storage_data_uri = null): self
 		{
 			if (!self::$instance)
 				self::$instance = new self($storage_data_uri);
@@ -129,7 +129,7 @@ namespace GeekJOB
 		 * @param string|null $storage_data_uri The MongoDB connection URI
 		 * @throws \Exception If database name is empty
 		 */
-		private function __construct(string $storage_data_uri = null)
+		private function __construct(?string $storage_data_uri = null)
 		{
 			if (empty($storage_data_uri))
 				$storage_data_uri = CONFIG['storage']['data']['uri'];
@@ -148,7 +148,7 @@ namespace GeekJOB
 
 			if (empty(self::$dbnamespace))
 				throw new \Exception("Empty database name");
-			// self::$dbnamespace = CONFIG['storage']['data']['base'];
+//        self::$dbnamespace = CONFIG['storage']['data']['base'];
 		}
 
 
@@ -367,6 +367,27 @@ namespace GeekJOB
 				->bulk
 				->insert($data);
 			return $this->executeBulkWrite();
+		}
+
+		/**
+		 * @param $data
+		 * @param array $opts
+		 * @return array|\MongoDB\Driver\WriteResult|null
+		 */
+		public function insertMany($data, array $opts = [])
+		{
+			$_opts = ['multi' => true];
+			if (!empty($opts)) $_opts = array_merge($_opts, $opts);
+			return $this->insert($data, $_opts);
+		}
+
+		/**
+		 * @param ...$args
+		 * @return array|\MongoDB\Driver\WriteResult|null
+		 */
+		public function insertOne(...$args)
+		{
+			return $this->insert(...$args);
 		}
 
 
@@ -728,8 +749,9 @@ namespace GeekJOB
 		function getNextAIDfromLast(): int
 		{
 			$lastDocument = $this->findOne([], [
-				'sort'  => ['aid' => -1],
-				'limit' => 1,
+				'sort'       => ['aid' => -1],
+				'projection' => ['_id' => 0, 'aid' => 1],
+				'limit'      => 1,
 			]);
 
 			if (!empty($lastDocument->aid)) {
@@ -827,7 +849,7 @@ namespace GeekJOB
 		 * @return array Array of collection information or collection names
 		 * @throws \MongoDB\Driver\Exception\Exception
 		 */
-		public function listCollections(array $opts = [], bool $nameOnly = false): array
+		public function listCollections(array $opts = [], bool $nameOnly = false, bool $assoc = false): array
 		{
 			try {
 				// Create command to list collections
@@ -845,6 +867,10 @@ namespace GeekJOB
 				$cursor = $this
 					->newCommand($command)
 					->execCommand();
+
+				if ($assoc) {
+					$cursor->setTypeMap(['root' => 'array', 'document' => 'array', 'array' => 'array']);
+				}
 
 				// Convert cursor to array
 				$collections = $cursor->toArray();
@@ -864,13 +890,18 @@ namespace GeekJOB
 			}
 		}
 
+		public function collectionExists(string $collection): bool
+		{
+			$collections = $this->listCollections(nameOnly: true);
+			return in_array($collection, $collections);
+		}
 
 		/**
 		 * @param bool $assoc
 		 * @return array|object|null
 		 * @throws \MongoDB\Driver\Exception\Exception
 		 */
-		public function getMetaData(?string $collection, bool $assoc = false): array|object|null
+		public function getMetaData(?string $collection = null, bool $assoc = false): array|object|null
 		{
 			$collection = $collection ?: $this->collection;
 			$meta = $this
@@ -885,7 +916,7 @@ namespace GeekJOB
 		 * @return string|null
 		 * @throws \MongoDB\Driver\Exception\Exception
 		 */
-		function getDescription(?string $collection): ?string
+		function getDescription(?string $collection = null): ?string
 		{
 			$collection = $collection ?: $this->collection;
 			$meta = $this->getMetaData($collection);
@@ -900,10 +931,10 @@ namespace GeekJOB
 		 * @return void
 		 * @throws \MongoDB\Driver\Exception\Exception
 		 */
-		public function setDescription(?string $collection, string $description): void
+		public function setDescription(string $description, ?string $collection = null): void
 		{
 			$collection = $collection ?: $this->collection;
-			$this->setMetaData($collection, ['description' => $description]);
+			$this->setMetaData(['description' => $description], $collection);
 		}
 
 
@@ -912,13 +943,13 @@ namespace GeekJOB
 		 * @return void
 		 * @throws \MongoDB\Driver\Exception\Exception
 		 */
-		public function setMetaData(?string $collection, array|object $set): void
+		public function setMetaData(array|object $set, ?string $collection = null): void
 		{
 			$collection = $collection ?: $this->collection;
 			$meta = $this->getMetaData();
 			if (empty($meta)) {
 				$meta = [
-					'_id' => $collection,
+					'_id'     => $collection,
 					'created' => $this->date(),
 					'updated' => $this->date(),
 				];
@@ -932,7 +963,8 @@ namespace GeekJOB
 			}
 		}
 
-				/**
+
+		/**
 		 * @param mixed $v
 		 * @return string
 		 */
@@ -948,12 +980,12 @@ namespace GeekJOB
 				return $this->toDateTime($v, 'Y-m-d H:i:s');
 			}
 			elseif (is_object($v)) {
-				return (string)$v;
+				$v = json_encode($v, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
 			}
 			elseif (is_array($v)) {
-				return implode(', ', $v);
+				$v = json_encode($v, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
 			}
-			return (string) $v;
+			return (string)$v;
 		}
 
 
@@ -988,7 +1020,7 @@ namespace GeekJOB
 	 * @param string|null $storage_data_uri The MongoDB connection URI
 	 * @return Mongo
 	 */
-	function Mongo(string $storage_data_uri = null): Mongo
+	function Mongo(?string $storage_data_uri = null): Mongo
 	{
 		return Mongo::getInstance($storage_data_uri);
 	}
