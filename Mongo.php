@@ -21,8 +21,7 @@ namespace
  * GeekJOB namespace.
  * Contains the Mongo class and related functions for MongoDB operations.
  * @package GeekJOB
- * @version 1.0.0
- * @since 1.0.0
+ * @version 1.9.5
  * @link
  * @license MIT
  * @see
@@ -76,7 +75,7 @@ namespace GeekJOB
 		/**
 		 * @var object|null
 		 */
-		public ?object $insertedId = null;
+		public object|string|null $insertedId = null;
 
 		/**
 		 * @var \MongoDB\Driver\Command
@@ -366,6 +365,7 @@ namespace GeekJOB
 				->newBulkWrite($opts['ordered'])
 				->bulk
 				->insert($data);
+
 			return $this->executeBulkWrite();
 		}
 
@@ -749,9 +749,8 @@ namespace GeekJOB
 		function getNextAIDfromLast(): int
 		{
 			$lastDocument = $this->findOne([], [
-				'sort'       => ['aid' => -1],
-				'projection' => ['_id' => 0, 'aid' => 1],
-				'limit'      => 1,
+				'sort'  => ['aid' => -1],
+				'limit' => 1,
 			]);
 
 			if (!empty($lastDocument->aid)) {
@@ -1010,6 +1009,90 @@ namespace GeekJOB
 				return $records;
 			}
 			return $result;
+		}
+
+
+		/**
+		 * Creates an index on the specified fields in the current collection.
+		 *
+		 * @param array|string $keys The fields to index. Can be a string for single field or array for compound index
+		 * @param array $options Index options (e.g., unique, sparse, expireAfterSeconds)
+		 * @return string|null The name of the created index or null if creation fails
+		 * @throws \MongoDB\Driver\Exception\Exception
+		 */
+		public function createIndex($keys, array $options = []): ?string
+		{
+			// Convert string key to array format
+			if (is_string($keys)) $keys = [$keys => 1];
+
+			try {
+				$command = [
+					'createIndexes' => $this->collection,
+					'indexes'       => [
+						[
+							'key'  => $keys,
+							'name' => $this->generateIndexName($keys),
+						],
+					],
+				];
+
+				// Merge additional options if provided
+				if (!empty($options))
+					$command['indexes'][0] = array_merge($command['indexes'][0], $options);
+
+				$result = $this
+					->newCommand($command)
+					->execCommand()
+					->toArray();
+
+				return $result[0]->name ?? null;
+			}
+			catch (\Exception $e) {
+				\captureError($e);
+				return null;
+			}
+		}
+
+		/**
+		 * Generates an index name based on the keys
+		 *
+		 * @param array $keys The index keys
+		 * @return string The generated index name
+		 */
+		private function generateIndexName(array $keys): string
+		{
+			$parts = [];
+			foreach ($keys as $key => $value) $parts[] = "{$key}_{$value}";
+			return implode('_', $parts);
+		}
+
+
+		/**
+		 * Creates a new empty collection in the database.
+		 *
+		 * @param string|null $collection The name of the collection to create
+		 * @param array $options Collection options (e.g., capped, size, max)
+		 * @return bool True if collection was created successfully, false otherwise
+		 * @throws \MongoDB\Driver\Exception\Exception
+		 */
+		public function createCollection(?string $collection = null, array $options = []): bool
+		{
+			try {
+				$collection = $collection ?: $this->collection;
+
+				$command = ['create' => $collection];
+
+				// Merge additional options if provided
+				if (!empty($options))
+					$command = array_merge($command, $options);
+
+				$this->newCommand($command)->execCommand();
+				return true;
+			}
+			catch (\Exception $e) {
+				\captureError($e);
+				return false;
+			}
 		}
 	}
 
