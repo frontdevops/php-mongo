@@ -436,6 +436,58 @@ public function setMetaData(?string $collection, array|object $set): void
 }
 ```
 
+Usage examples:
+```php
+$db = GeekJOB\Mongo();
+
+$db('new_collection')->createCollection();
+// or
+$db()->createCollection('new_collection');
+```
+
+```php
+$db = GeekJOB\Mongo();
+$db()->createCollection('logs', [
+    'capped' => true,
+    'size' => 1048576, // 1MB size
+    'max' => 1000 // documents count
+]);
+
+$db = GeekJOB\Mongo();
+$db()->createCollection('users', [
+    'validator' => [
+        '$jsonSchema' => [
+            'bsonType' => 'object',
+            'required' => ['name', 'email'],
+            'properties' => [
+                'name' => ['bsonType' => 'string'],
+                'email' => ['bsonType' => 'string']
+            ]
+        ]
+    ]
+]);
+```
+
+
+```php
+$db($dash_collector_dbname)->createIndex('fieldName');
+
+$db($dash_collector_dbname)->createIndex([
+    'field1' => 1,
+    'field2' => -1
+]);
+
+$db($dash_collector_dbname)->createIndex(
+    ['email' => 1],
+    ['unique' => true]
+);
+
+$db($dash_collector_dbname)->createIndex(
+    'createdAt',
+    ['expireAfterSeconds' => 3600] // удаляет документы через час
+);
+```
+
 
 
 # License
