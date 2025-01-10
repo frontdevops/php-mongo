@@ -106,6 +106,58 @@ try {
 Explanation: This example illustrates how to use transactions for ensuring data consistency across multiple operations. We start a transaction, perform two operations (updating an account balance and inserting a transaction record), and then commit the transaction. If any error occurs, the transaction is aborted, rolling back any changes. This is crucial for maintaining data integrity in financial operations or other scenarios where multiple related updates must succeed or fail together.
 These examples demonstrate the versatility and power of the GeekJOB MongoDB Library, showcasing various operations from basic CRUD to complex aggregations and transactions. The library's consistent interface `($db($table)->...)` makes it intuitive to use across different types of operations.
 
+### Create empty collection
+```php
+$db = GeekJOB\Mongo();
+
+$db('new_collection')->createCollection();
+// or
+$db()->createCollection('new_collection');
+```
+
+```php
+$db = GeekJOB\Mongo();
+$db()->createCollection('logs', [
+    'capped' => true,
+    'size' => 1048576, // 1MB size
+    'max' => 1000 // documents count
+]);
+
+$db = GeekJOB\Mongo();
+$db()->createCollection('users', [
+    'validator' => [
+        '$jsonSchema' => [
+            'bsonType' => 'object',
+            'required' => ['name', 'email'],
+            'properties' => [
+                'name' => ['bsonType' => 'string'],
+                'email' => ['bsonType' => 'string']
+            ]
+        ]
+    ]
+]);
+```
+
+### Create indexes
+```php
+$db($dash_collector_dbname)->createIndex('fieldName');
+
+$db($dash_collector_dbname)->createIndex([
+    'field1' => 1,
+    'field2' => -1
+]);
+
+$db($dash_collector_dbname)->createIndex(
+    ['email' => 1],
+    ['unique' => true]
+);
+
+$db($dash_collector_dbname)->createIndex(
+    'createdAt',
+    ['expireAfterSeconds' => 3600] // удаляет документы через час
+);
+```
+
 
 # Methods
 ```php
@@ -435,59 +487,6 @@ public function setMetaData(?string $collection, array|object $set): void
 {
 }
 ```
-
-Usage examples:
-```php
-$db = GeekJOB\Mongo();
-
-$db('new_collection')->createCollection();
-// or
-$db()->createCollection('new_collection');
-```
-
-```php
-$db = GeekJOB\Mongo();
-$db()->createCollection('logs', [
-    'capped' => true,
-    'size' => 1048576, // 1MB size
-    'max' => 1000 // documents count
-]);
-
-$db = GeekJOB\Mongo();
-$db()->createCollection('users', [
-    'validator' => [
-        '$jsonSchema' => [
-            'bsonType' => 'object',
-            'required' => ['name', 'email'],
-            'properties' => [
-                'name' => ['bsonType' => 'string'],
-                'email' => ['bsonType' => 'string']
-            ]
-        ]
-    ]
-]);
-```
-
-
-```php
-$db($dash_collector_dbname)->createIndex('fieldName');
-
-$db($dash_collector_dbname)->createIndex([
-    'field1' => 1,
-    'field2' => -1
-]);
-
-$db($dash_collector_dbname)->createIndex(
-    ['email' => 1],
-    ['unique' => true]
-);
-
-$db($dash_collector_dbname)->createIndex(
-    'createdAt',
-    ['expireAfterSeconds' => 3600] // удаляет документы через час
-);
-```
-
 
 
 # License
